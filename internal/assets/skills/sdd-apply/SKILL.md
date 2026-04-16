@@ -97,6 +97,17 @@ FOR EACH TASK:
 ├── Read relevant spec scenarios (these are your acceptance criteria)
 ├── Read the design decisions (these constrain your approach)
 ├── Read existing code patterns (match the project's style)
+├── Classify the task type:
+│   ├── Behavior task (entities, use cases, services, hooks, components)
+│   │   └── Use full TDD cycle (5-step):
+│   │       0. REASON → define case list (test file TODO)
+│   │       1. RED → write failing test for next case
+│   │       2. GREEN → minimal implementation (TPP)
+│   │       3. REFACTOR → improve code safely
+│   │       4. RE-EVALUATE → choose next simplest case → loop
+│   │
+│   └── Non-behavior task (types, interfaces, DTOs, config, wiring)
+│       └── Implement directly without TDD cycle
 ├── Write the code
 ├── Mark task as complete [x] in tasks.md
 └── Note any issues or deviations

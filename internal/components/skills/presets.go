@@ -26,6 +26,11 @@ var foundationSkills = []model.SkillID{
 	model.SkillSkillRegistry,
 }
 
+// customSkills are baseline learning skills for the "recommended" tier.
+var guidelinesSkills = []model.SkillID{
+	model.SkillGuidelinesXPTDDPractices,
+}
+
 // SkillsForPreset returns which skills should be installed for a given preset.
 //
 //   - "minimal" / PresetMinimal:       SDD skills only
@@ -37,11 +42,14 @@ func SkillsForPreset(preset model.PresetID) []model.SkillID {
 	case model.PresetMinimal:
 		return copySkills(sddSkills)
 	case model.PresetEcosystemOnly:
-		return copySkills(append(sddSkills, foundationSkills...))
+		combined := append(sddSkills, foundationSkills...)
+		combined = append(combined, guidelinesSkills...)
+		return copySkills(combined)
 	case model.PresetFullGentleman:
 		all := make([]model.SkillID, 0, len(sddSkills)+len(foundationSkills))
 		all = append(all, sddSkills...)
 		all = append(all, foundationSkills...)
+		all = append(all, guidelinesSkills...)
 		return all
 	case model.PresetCustom:
 		return nil

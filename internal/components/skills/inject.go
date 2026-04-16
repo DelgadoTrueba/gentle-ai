@@ -1,8 +1,11 @@
 package skills
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"log"
+	pathpkg "path"
 	"path/filepath"
 	"strings"
 
@@ -37,6 +40,7 @@ type InjectionResult struct {
 //
 // Individual skill failures (e.g., missing embedded asset) are logged
 // and skipped rather than aborting the entire operation.
+// TODO add markdown archivos
 func Inject(homeDir string, adapter agents.Adapter, skillIDs []model.SkillID) (InjectionResult, error) {
 	if !adapter.SupportsSkills() {
 		return InjectionResult{Skipped: skillIDs}, nil
@@ -76,9 +80,71 @@ func Inject(homeDir string, adapter agents.Adapter, skillIDs []model.SkillID) (I
 
 		changed = changed || writeResult.Changed
 		paths = append(paths, path)
+
+		referencesChanged, referencePaths, copyErr := copyEmbeddedDir(
+			assets.FS,
+			filepath.ToSlash(filepath.Join("skills", string(id), "references")),
+			filepath.Join(skillDir, string(id), "references"),
+		)
+		if copyErr != nil {
+			return InjectionResult{}, fmt.Errorf("skill %q references: copy failed: %w", id, copyErr)
+		}
+
+		changed = changed || referencesChanged
+		paths = append(paths, referencePaths...)
 	}
 
 	return InjectionResult{Changed: changed, Files: paths, Skipped: skipped}, nil
+}
+
+func copyEmbeddedDir(embeddedFS fs.FS, srcDir, dstDir string) (bool, []string, error) {
+	entries, err := fs.ReadDir(embeddedFS, srcDir)
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return false, nil, nil
+		}
+		return false, nil, err
+	}
+	if len(entries) == 0 {
+		return false, nil, nil
+	}
+
+	changed := false
+	paths := make([]string, 0)
+
+	err = fs.WalkDir(embeddedFS, srcDir, func(path string, d fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if d.IsDir() {
+			return nil
+		}
+
+		relPath := strings.TrimPrefix(path, srcDir+"/")
+		if relPath == path {
+			relPath = pathpkg.Base(path)
+		}
+
+		content, err := fs.ReadFile(embeddedFS, path)
+		if err != nil {
+			return err
+		}
+
+		outPath := filepath.Join(dstDir, relPath)
+		writeResult, err := filemerge.WriteFileAtomic(outPath, content, 0o644)
+		if err != nil {
+			return err
+		}
+
+		changed = changed || writeResult.Changed
+		paths = append(paths, outPath)
+		return nil
+	})
+	if err != nil {
+		return false, nil, err
+	}
+
+	return changed, paths, nil
 }
 
 // SkillPathForAgent returns the filesystem path where a skill file would be written.

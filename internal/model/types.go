@@ -76,6 +76,7 @@ const (
 	SkillBranchPR      SkillID = "branch-pr"
 	SkillIssueCreation SkillID = "issue-creation"
 	SkillSkillRegistry SkillID = "skill-registry"
+	SkillGuidelinesXPTDDPractices SkillID = "guidelines-xp-tdd-practices"
 )
 
 type PersonaID string

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"testing/fstest"
 
 	"github.com/gentleman-programming/gentle-ai/internal/agents"
 	"github.com/gentleman-programming/gentle-ai/internal/agents/claude"
@@ -223,6 +224,64 @@ func TestInjectUsesRealEmbeddedContent(t *testing.T) {
 	// Real embedded content should be substantial (not a one-line stub).
 	if len(content) < 100 {
 		t.Fatalf("skill file content looks like a stub (len=%d)", len(content))
+	}
+}
+
+func TestCopyEmbeddedDirCopiesNestedFiles(t *testing.T) {
+	tmp := t.TempDir()
+	embedded := fstest.MapFS{
+		"skills/example/references/guide.md":         {Data: []byte("guide")},
+		"skills/example/references/nested/tips.md":   {Data: []byte("tips")},
+		"skills/example/references/nested/deep/a.md": {Data: []byte("a")},
+	}
+
+	changed, files, err := copyEmbeddedDir(
+		embedded,
+		"skills/example/references",
+		filepath.Join(tmp, "references"),
+	)
+	if err != nil {
+		t.Fatalf("copyEmbeddedDir() error = %v", err)
+	}
+	if !changed {
+		t.Fatal("copyEmbeddedDir() changed = false")
+	}
+	if len(files) != 3 {
+		t.Fatalf("copyEmbeddedDir() files len = %d, want 3", len(files))
+	}
+
+	for _, rel := range []string{"guide.md", filepath.Join("nested", "tips.md"), filepath.Join("nested", "deep", "a.md")} {
+		if _, err := os.Stat(filepath.Join(tmp, "references", rel)); err != nil {
+			t.Fatalf("expected copied file %q: %v", rel, err)
+		}
+	}
+
+	changed, files, err = copyEmbeddedDir(
+		embedded,
+		"skills/example/references",
+		filepath.Join(tmp, "references"),
+	)
+	if err != nil {
+		t.Fatalf("copyEmbeddedDir() second error = %v", err)
+	}
+	if changed {
+		t.Fatal("copyEmbeddedDir() second changed = true")
+	}
+	if len(files) != 3 {
+		t.Fatalf("copyEmbeddedDir() second files len = %d, want 3", len(files))
+	}
+}
+
+func TestCopyEmbeddedDirMissingDirIsNoop(t *testing.T) {
+	changed, files, err := copyEmbeddedDir(fstest.MapFS{}, "skills/example/references", t.TempDir())
+	if err != nil {
+		t.Fatalf("copyEmbeddedDir() error = %v", err)
+	}
+	if changed {
+		t.Fatal("copyEmbeddedDir() changed = true, want false")
+	}
+	if len(files) != 0 {
+		t.Fatalf("copyEmbeddedDir() files len = %d, want 0", len(files))
 	}
 }
 
