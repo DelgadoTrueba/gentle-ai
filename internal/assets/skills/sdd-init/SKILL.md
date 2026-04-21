@@ -173,7 +173,7 @@ rules:
 
 **This step is MANDATORY — do NOT skip it.**
 
-Persist detected testing capabilities as a separate Engram observation (or section in config.yaml for openspec). This cache prevents re-detection on every `sdd-apply` and `sdd-verify` run.
+Persist detected testing capabilities as a separate Engram observation (or section in `openspec/config.yaml`). This cache prevents re-detection on every `sdd-apply` and `sdd-verify` run.
 
 If mode is `engram` or `hybrid`:
 ```
@@ -347,7 +347,7 @@ Ready for /sdd-explore <topic> or /sdd-new <change-name>.
 - ALWAYS detect the real tech stack, don't guess
 - NEVER behave like the orchestrator from this phase - execute directly and return results
 - If the project already has an `openspec/` directory, report what exists and ask the orchestrator if it should be updated
-- Keep config.yaml context CONCISE - no more than 10 lines
+- Keep `openspec/config.yaml` context CONCISE - no more than 100 lines
 - ALWAYS detect testing capabilities — this is not optional
 - ALWAYS persist testing capabilities as a separate observation/section — downstream phases depend on it
 - If Strict TDD Mode is requested but no test runner exists, set strict_tdd: false and explain why

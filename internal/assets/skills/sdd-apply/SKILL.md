@@ -40,7 +40,7 @@ Before writing ANY code:
 1. Read the specs — understand WHAT the code must do
 2. Read the design — understand HOW to structure the code
 3. Read existing code in affected files — understand current patterns
-4. Check the project's coding conventions from `config.yaml`
+4. Check the project's coding conventions from `openspec/config.yaml`
 
 #### Step 2b: Read Previous Apply-Progress (if exists)
 
